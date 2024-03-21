@@ -30,9 +30,11 @@ python,pandas,numpy,tensorflow,keras,streamlit.
 - Cloning the repo
   git clone https://github.com/AMANREVANKAR/captionwiz.git
 - Activating the virtual environment
-   source env/bin/activate
+  
+   run source env/bin/activate
 - Runining the streamlit file
-    streamlit run app.py
+  
+   run streamlit run app.py
 
 ## Working
 <img width="880" alt="Screenshot 2024-03-21 at 9 26 20 PM" src="https://github.com/AMANREVANKAR/captionwiz/assets/122635887/83e2b474-71a0-4f6d-bedb-710f6a6a517a">

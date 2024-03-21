@@ -12,40 +12,94 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing.text import Tokenizer
 
+
+# Add the CSS style for the background image
+# st.markdown(
+#     """
+#     <style>
+#     .main {
+#         background-image: url("https://img.freepik.com/free-vector/wavy-background-concept_23-2148497712.jpg");
+#         background-size: cover;
+#         background-repeat: no-repeat;
+#         background-position: center;
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
+
+
+
+captions_file_path = '/Users/amanrev/Documents/IET/captionwiz/data/captions.txt'
+with open(captions_file_path, 'r') as file:
+    lines = file.readlines()
+
+captions_dict = {}
+for line in lines:
+    image_id, caption = line.strip().split(',', 1)
+    captions_dict.setdefault(image_id,[] ).append(caption)    
+
+df = pd.DataFrame(list(captions_dict.items()), columns=['images_id', 'captions'])
+df = df.iloc[1:]
+
+
+
+captions_dict = {}
+for line in lines:
+    image_id, caption = line.strip().split(',', 1)
+    captions_dict.setdefault(image_id, []).append(caption)
+
+for image_id, captions in captions_dict.items():
+    captions_dict[image_id] = [caption.strip('[]') for caption in captions]
+
+def clean(mapping):
+    for key, captions in mapping.items():
+        for i in range(len(captions)):
+            # take one caption at a time
+            caption = captions[i]
+            # preprocessing steps
+            # convert to lowercase
+            caption = caption.lower()
+            # delete digits, special chars, etc., 
+            caption = caption.replace('[^A-Za-z]', '')
+            # delete additional spaces
+            caption = caption.replace('\s+', ' ')
+            # add start and end tags to the caption
+            caption = '<start> ' + " ".join([word for word in caption.split() if len(word)>1]) + ' <end>'
+            captions[i] = caption
+
+clean(captions_dict)    
+
+all_captions = []
+for key in captions_dict:
+    for caption in captions_dict[key]:
+        all_captions.append(caption)
+
+
+
+
 loaded_captioning_model=pickle.load(open("/Users/amanrev/Documents/IET/captionwiz/trained_captioning_model.sav",'rb'))
+
+
+
+
+
+
 
 inception_v3 = InceptionV3()
 inception_v3 = Model(inputs = inception_v3.inputs, outputs = inception_v3.layers[-2].output)
 inception_v3.summary()
 
-tokenizer = Tokenizer()
-# Function to preprocess the image
 
-def predict_caption(model, image, tokenizer, max_length):
-    # add start tag for generation process
-    in_text = '<start>'
-    # iterate over the max length of sequence
-    for i in range(max_length):
-        # encode input sequence
-        sequence = tokenizer.texts_to_sequences([in_text])[0]
-        # pad the sequence
-        sequence = pad_sequences([sequence], max_length)
-        # predict next word
-        yhat = model.predict([image, sequence], verbose=0)
-        # get index with high probability
-        yhat = np.argmax(yhat)
-        # convert index to word
-        word = idx_to_word(yhat, tokenizer)
-        # stop if word not found
-        if word is None:
-            break
-        # append word as input for generating next word
-        in_text += " " + word
-        # stop if we reach end tag
-        if word == 'endseq':
-            break
-      
-    return in_text
+
+
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(all_captions)
+vocab_size = len(tokenizer.word_index) + 1
+
+
+
+
 
 
 
@@ -55,12 +109,56 @@ def idx_to_word(integer, tokenizer):
             return word
     return None
 
-# def load_img(img_path):
-#     img = tensorflow.io.read_file(img_path)
-#     img = tensorflow.io.decode_jpeg(img, channels=3)
-#     img = tensorflow.keras.layers.Resizing(299, 299)(img)
-#     img = img/255
-#     return img 
+
+
+
+
+
+
+
+def predict_caption(model, image, tokenizer, max_length):
+ 
+    in_text = '<start>'
+ 
+    for i in range(max_length):
+        print("hello2")
+        sequence = tokenizer.texts_to_sequences([in_text])[0]
+        print(sequence)
+
+        sequence = pad_sequences([sequence], max_length)
+        print( sequence)
+        
+        yhat = model.predict([image, sequence], verbose=0)
+        print(yhat)
+      
+        yhat = np.argmax(yhat)
+        print(yhat)
+ 
+        word = idx_to_word(yhat, tokenizer)
+        
+        if word is None:
+            break
+        print(word)
+        in_text += " " + word
+   
+        if word == 'endseq':
+            break
+      
+    return in_text
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def get_feature_vector(img):
     img = tensorflow.expand_dims(img, axis=0)
@@ -71,43 +169,43 @@ def get_feature_vector(img):
 
 
 
-# Function to generate caption
+
+
+
+
+
+
+
+
+
+
+
+
 def generate_caption(image):
-    y_pred = predict_caption(loaded_captioning_model, get_feature_vector(image), tokenizer, 35) 
-    return y_pred  # Replace this with the actual generated caption
+    feature=get_feature_vector(image)
+    y_pred = predict_caption(loaded_captioning_model,feature , tokenizer, 35) 
+    y_pred = y_pred.replace('<start>', '')
+    y_pred = y_pred.replace('<end>', '')
+    y_pred = y_pred.replace('end', '')
+    return y_pred  
 
 # Main function to define the Streamlit app
 def main():
     st.title("CaptionWiz: Image Captioning")
 
-    # File uploader widget
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
     if uploaded_file is not None:
+       
         image_bytes = uploaded_file.read()
+        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
         img = tensorflow.io.decode_jpeg(image_bytes, channels=3)
         img = tensorflow.keras.layers.Resizing(299, 299)(img)
         img = img/255
-        # Display the uploaded image
-    #     image = Image.open(uploaded_file)
-    
-    # # Resize the image to 299x299
-    #     resized_image = image.resize((299, 299))
-    
-    # # Convert PIL Image to TensorFlow tensor
-    #     numpy_image = np.array(resized_image)
-
-    
-    #     numpy_image = numpy_image.astype(np.float32) / 255.0
-    
-    # Display the resized image
-        # st.image(img, caption="Resized Image (299x299)", use_column_width=True)
-        # Button to generate caption
         if st.button("Generate Caption"):
-            # Generate caption and display
             with st.spinner('Generating caption...'):
                 caption = generate_caption(img)
-                st.success("Caption: {}".format(caption))
+                st.success("Caption: {}".format(caption)) 
 
 # Run the app
 if __name__ == "__main__":

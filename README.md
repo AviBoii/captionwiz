@@ -36,3 +36,21 @@ python,pandas,numpy,tensorflow,keras,streamlit.
 
 ## Working
 <img width="880" alt="Screenshot 2024-03-21 at 9 26 20 PM" src="https://github.com/AMANREVANKAR/captionwiz/assets/122635887/83e2b474-71a0-4f6d-bedb-710f6a6a517a">
+
+## Model 2
+
+## Model using CNN nad Transformer
+
+## Dependencies
+•⁠  ⁠Python 3.x
+•⁠  ⁠TensorFlow 2.x
+•⁠  ⁠Keras
+•⁠  ⁠NumPy
+•⁠  ⁠OpenCV
+
+ 
+## Dataset
+We used the MS Coco - 2017 dataset for training and evaluation. It contains a large collection of images (around 6 hundeed thousand) along with corresponding captions.
+
+## Model Architecture
+We employ a Transformer model for image captioning. The model consists of three main parts: A pretrained CNN (inceptionv3 is used for this project) for image extraction, the Transformer Encoder for processing the image features and the caption embeddings, and a Transformer Decoder for generating the output captions.

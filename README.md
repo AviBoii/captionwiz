@@ -3,8 +3,11 @@
 ## Overview 
 Image captioning is a challenging task in the field of computer vision and natural language processing. The goal of this project is to automatically generate captions that accurately describe the content of an image.
 
+## Model 1
+
 ## Technology used
 python,pandas,numpy,tensorflow,keras,streamlit.
+
 
 ## Features
 - ###  CNN Feature Extraction
